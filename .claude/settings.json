@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:rv.hessenrecht.hessen.de)",
+      "WebFetch(domain:www.rv.hessenrecht.hessen.de)"
+    ]
+  }
+}
