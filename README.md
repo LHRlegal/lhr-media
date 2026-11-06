@@ -1,46 +1,20 @@
 # lhr-media
 
-Bilder für das Magazin auf lhr-law.de (Beitragsbilder, Anlagen) und der Worker `lhr-media`, der Bilder kurzzeitig im Netz ausliefert.
+Bilddateien für die Magazinbeiträge auf lhr-law.de/magazin (Titelbilder, Grafiken). Eine Datei pro Beitrag und Größe, abgelegt nach Monat.
 
-## Zwei Teile, nicht verbunden
+## Aufbau
 
-| Teil | Wo | Was |
-|---|---|---|
-| **Bildablage** | dieses Repo | Fertige Beitragsbilder als PNG. Reine Ablage, kein Build, kein Deploy. |
-| **Bild-Host** | Cloudflare Worker `lhr-media` (Konto Service+lhr@daro.de) | Nimmt Bilder per Upload an und liefert sie unter `/m/<key>` aus. |
-
-Es gibt keine Automatik zwischen beiden: Ein Commit hier lädt nichts in den Worker, und der Worker schreibt nichts ins Repo.
-
-## Aufbau des Repos
-
-- `magazin/<JJJJ-MM>/`: Beitragsbilder je Monat der Veröffentlichung. Dateiname `<slug>-v<N>-<stil>-620x326.png` (Stile bisher `klassisch`, `hingucker`, `illustration`, `grafik`). Zu einem Beitrag gibt es meist eine deutsche und eine englische Variante (englischer Slug).
-- `2026/10/`: ältere Bilder aus Oktober, Größen `620x326` und `1240x652` (doppelte Auflösung), dazu einzelne Anlagen.
-- Commit-Nachricht: `Magazin <slug-des-beitrags>`.
-
-## Der Worker `lhr-media`
-
-- Adresse: `https://lhr-media.service-lhr.workers.dev`
-- `GET /m/<key>`: liefert das Bild (Cache 1 Tag, `X-Content-Type-Options: nosniff`). Unbekannter Schlüssel: 404.
-- `PUT /upload/<dateiname>` mit `Authorization: Bearer <UPLOAD_TOKEN>` und passendem `Content-Type`: speichert das Bild und antwortet mit `url` und `key`.
-  - Erlaubt: `image/png`, `image/jpeg`, `image/webp`, höchstens 10 MB.
-  - Der Schlüssel wird aus Zeitstempel und bereinigtem Dateinamen gebildet.
-- **Bilder verfallen nach 30 Tagen** (KV-Ablauf). Dauerhaft liegen sie nur in diesem Repo. Für Magazinbeiträge deshalb die Bilder nach WordPress hochladen und nicht auf eine `/m/`-Adresse verlinken.
-- Alle anderen Pfade: 404 mit Text `LHR Media`.
-
-### Bindungen und Secrets (nur Namen)
-
-| Name | Art |
+| Pfad | Inhalt |
 |---|---|
-| `MEDIA` | KV-Namespace (Bilder mit Ablauf und Metadaten) |
-| `UPLOAD_TOKEN` | Secret, Bearer-Token für den Upload |
+| `2026/10/`, `magazin/2026-10/`, `magazin/2026-11/` | PNG-Bilder je Beitrag |
+| `.claude/settings.json` | erlaubt den Magazin-Läufen den Abruf von rv.hessenrecht.hessen.de (Rechtsprechung) |
 
-Der Wert von `UPLOAD_TOKEN` steht nie im Repo. Er liegt im Cloudflare-Dashboard (Worker `lhr-media`, Einstellungen).
+Namensschema: `<beitrags-slug>-<variante>-<breite>x<höhe>.png`, z. B. `kuendigungsbutton-login-bgh-v5-grafik-620x326.png`. Varianten: `v1-klassisch`, `v3-illustration`, `v4-hingucker`, `v5-grafik`. Englische (`…-zh-…` chinesische) Fassungen tragen den englischen Slug. Standardgröße 620×326, Titelbild 1240×652.
 
-### Deploy
+## Deploy
 
-Der Worker-Quellcode liegt **nicht** in diesem Repo. Er wurde per API hochgeladen (letzte Änderung 13.10.2026, „Secret Change“). Solange der Code nicht hier liegt, gibt es keinen Git-Deploy und keinen Build-Check. Siehe `STAND.md`.
+Kein Deploy. Das Repo ist nur Ablage. Die Beiträge selbst entstehen mit dem Skill `lhr-magazinbeitrag` und werden in WordPress veröffentlicht. Wie die Bilder von dort aus eingebunden werden, ist hier nicht dokumentiert (offen, siehe `STAND.md`).
 
-## Regeln
+## Secrets
 
-- Keine Mandantendaten und keine Secrets in Bilder oder Dateinamen.
-- Arbeitsweise wie in allen LHR-Repos: eigener Branch im Worktree, PR, Squash-Merge auf `main`, `STAND.md` und `CHANGELOG.md` nachziehen.
+Keine. Keine Zugangsdaten ins Repo legen.
